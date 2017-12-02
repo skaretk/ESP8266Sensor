@@ -1,16 +1,9 @@
 /* WifiClient.h
  * Connect and transmit data to Domoticz
 */
-#ifndef WIFICLIENT_H
-#define WIFICLIENT_H
+#pragma once
 
-#include "domoticzCfg.h"
-
-struct WifiCfg
-{
-	char* ssid = "Enter SSID";
-	char* password = "Enter Password"; 
-};
+#include "config.h"
 
 class WifiClient
 {
@@ -18,10 +11,17 @@ class WifiClient
 	WifiClient() {};
 	void connect();
 	void updateData(float temperature, float humidity);
+	void setWifiConfig(const char* ssid, const char* pw);
+	void setDomoticzConfig(const char* ip, int port, int idx);
 	
 	private:
-	WifiCfg wifiCfg;
-	Domoticz domoticz;
+	// Wifi
+	char* ssid = "KogC";
+	char* password = "Vesla2011"; 
+	// Domoticz
+	char* domoticzIp = "192.168.1.35";
+	int domoticzPort = 8080;
+	int domoticzIdx = 125;
 };
 
-#endif
+

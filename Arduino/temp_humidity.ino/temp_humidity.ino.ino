@@ -1,35 +1,36 @@
 #include <ESP8266WiFi.h>
 #include <DHT.h>
 
-// #include "domoticzCfg.h"
+#include "config.h"
 #include "wifiClient.h"
-#include "Config.h"
 
 // Temperature and humidity
 float temp = 0;
 float humidity = 0;
 float hic = 0; // heat index
 
-ESPConfig espConfig;
+SleepCfg sleepCfg;
+DhtCfg dhtCfg;
 WifiClient wifiClient;
+Config config;
 
 // Initialize DHT sensor.
 // Note that older versions of this library took an optional third parameter to
 // tweak the timings for faster processors.  This parameter is no longer needed
 // as the current DHT reading algorithm adjusts itself to work on faster procs.
-DHT dht(espConfig.dhtPin, espConfig.dhtType);
+DHT dht(dhtCfg.pin, dhtCfg.type);
 
 void setup()
 {
-  Serial.begin(115200);
-  Serial.setTimeout(2000);
-  // delay(10);
+  Serial.begin(74880);
+  delay(10);
   // Wait for serial to initialize.
   while(!Serial) { }
+  config.readJson();
   
   Serial.println("ESP8266 Initliazing!");   
   wifiClient.connect();  
-  dht.begin();
+  dht.begin();  
 }
 
 void loop()
@@ -38,13 +39,13 @@ void loop()
     readDht();
     //printInfo();
     wifiClient.updateData(temp, humidity);
-    if (espConfig.sleep.enabled) {
+    if (sleepCfg.deepSleep) {
       Serial.println("Deepsleep enabled");
-      ESP.deepSleep(espConfig.sleep.sleepTimeS * 1000000);
+      ESP.deepSleep(sleepCfg.sleepTime * 1000000);
     }
     else {
       Serial.println("Deepsleep not enabled");  
-      delay(espConfig.sleep.sleepTimeS * 1000); // Wait 60 seconds
+      delay(sleepCfg.sleepTime * 1000); // Wait 60 seconds
     }
 }
 
