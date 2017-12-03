@@ -8,11 +8,11 @@ bool Config::readJson()
 {
     char jsonConfig[] = R"({
         "wifi": {
-            "ssid": "ssid",
-            "password": "pw",
-            "ip": "ip",
-            "port": "port",
-            "idx": "idx"
+            "ssid": "",
+            "password": "",
+            "ip": "",
+            "port": "",
+            "idx": ""
         },			
         "dht": {
             "pin": "4",
@@ -41,10 +41,10 @@ bool Config::deserialize(char* json)
     }
     /* WIFI Config */
     JsonObject& wifi = root["wifi"];
-    wifiConfig.ssid = wifi.get<String>("ssid");
-    wifiConfig.password = wifi.get<String>("password");
+    strcpy(wifiConfig.ssid, wifi["ssid"]);
+    strcpy(wifiConfig.password, wifi["password"]);
     /* Domoticz Config */
-    wifiConfig.domoticz_ip = wifi.get<String>("ip");
+    strcpy(wifiConfig.domoticz_ip, wifi["ip"]);
     wifiConfig.domoticz_port = wifi.get<int>("port");
     wifiConfig.domoticz_idx = wifi.get<int>("idx");    
     /* DHT Config */

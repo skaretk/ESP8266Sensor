@@ -7,21 +7,22 @@
 
 class WifiClient
 {
-	public:
-	WifiClient() {};
-	void connect();
-	void updateData(float temperature, float humidity);
-	void setWifiConfig(const char* ssid, const char* pw);
-	void setDomoticzConfig(const char* ip, int port, int idx);
-	
-	private:
-	// Wifi
-	char* ssid = "KogC";
-	char* password = "Vesla2011"; 
-	// Domoticz
-	char* domoticzIp = "192.168.1.35";
-	int domoticzPort = 8080;
-	int domoticzIdx = 125;
+public:
+    WifiClient() {};
+    void connect();
+    void updateData(float temperature, float humidity);
+    void getWifiConfig(WifiCfg);
+    void setDomoticzConfig(const char* ip, int port, int idx);
+    
+private:
+    bool configured = false;
+    // Wifi
+    char* ssid = "";
+    char* password = "";
+    // Domoticz
+    char* domoticzIp = "";
+    int domoticzPort = 0;
+    int domoticzIdx = 0;
 };
 
 

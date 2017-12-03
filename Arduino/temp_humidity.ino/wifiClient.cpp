@@ -1,6 +1,16 @@
 #include <ESP8266WiFi.h>
 #include "wifiClient.h"
 
+void WifiClient::getWifiConfig(WifiCfg cfg)
+{
+    ssid = cfg.ssid;
+    password = cfg.password;
+    domoticzIp = cfg.domoticz_ip;
+    domoticzPort = cfg.domoticz_port;
+    domoticzIdx = cfg.domoticz_idx;
+    configured = true;
+}
+
 void WifiClient::connect()
 {
   Serial.println();

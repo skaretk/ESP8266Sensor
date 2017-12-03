@@ -26,7 +26,10 @@ void setup()
   delay(10);
   // Wait for serial to initialize.
   while(!Serial) { }
-  config.readJson();
+  if (config.readJson()) {
+      Serial.println("ESP Configured from json");
+      wifiClient.getWifiConfig(config.getWifi());
+  }
   
   Serial.println("ESP8266 Initliazing!");   
   wifiClient.connect();  

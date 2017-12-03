@@ -12,12 +12,12 @@
 
 struct WifiCfg {
     // Wifi
-    String ssid = "KogC";
-    String password = "Vesla2011"; 
+    char* ssid = "";
+    char* password = ""; 
     // Domoticz
-    String domoticz_ip = "192.168.1.35";
-    int domoticz_port = 8080;
-    int domoticz_idx = 125;
+    char* domoticz_ip = "";
+    int domoticz_port = 0;
+    int domoticz_idx = 0;
 };
 
 struct SleepCfg {
