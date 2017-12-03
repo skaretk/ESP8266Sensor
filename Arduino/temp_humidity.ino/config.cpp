@@ -80,13 +80,13 @@ void Config::writeJson()
     JsonObject& root = jsonBuffer.createObject();
 
     JsonObject& wifi = root.createNestedObject("wifi");
-    wifi["ssid"] = "K&C";
-    wifi["password"] = "Vesla2011";
+    wifi["ssid"] = "";
+    wifi["password"] = "";
 
     JsonObject& domoticz = root.createNestedObject("domoticz");
-    domoticz["ip"] = "192.168.1.135";
-    domoticz["port"] = "8080";
-    domoticz["idx"] = "125";
+    domoticz["ip"] = "";
+    domoticz["port"] = "";
+    domoticz["idx"] = "";
 
     JsonObject& esp = root.createNestedObject("esp");
     esp["dhtPin"] = "4";
