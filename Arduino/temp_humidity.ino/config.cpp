@@ -39,12 +39,17 @@ bool Config::deserialize(char* json)
         Serial.println("parseObject() failed");
         return false;
     }
+    root.prettyPrintTo(Serial);
+
     /* WIFI Config */
     JsonObject& wifi = root["wifi"];
-    strcpy(wifiConfig.ssid, wifi["ssid"]);
-    strcpy(wifiConfig.password, wifi["password"]);
+    const char* ssid = wifi["ssid"];
+    wifiConfig.ssid = const_cast<char*>(ssid);
+    const char* pw = wifi["password"];
+    wifiConfig.password = const_cast<char*>(pw);
     /* Domoticz Config */
-    strcpy(wifiConfig.domoticz_ip, wifi["ip"]);
+    const char* ip = wifi["ip"];
+    wifiConfig.domoticz_ip = const_cast<char*>(ip);
     wifiConfig.domoticz_port = wifi.get<int>("port");
     wifiConfig.domoticz_idx = wifi.get<int>("idx");    
     /* DHT Config */
@@ -52,13 +57,13 @@ bool Config::deserialize(char* json)
     dhtConfig.pin = dht.get<uint8_t>("pin");
     String dhtType = dht.get<String>("type");
     if (dhtType == "DHT11")
-        wifiConfig.domoticz_idx = DHT11;
+        dhtConfig.type = DHT11;
     else if (dhtType == "DHT22")
-        wifiConfig.domoticz_idx = DHT22;
+        dhtConfig.type = DHT22;
     else if (dhtType == "DHT21")
-        wifiConfig.domoticz_idx = DHT21;
+        dhtConfig.type = DHT21;
     else if (dhtType == "AM2301")
-        wifiConfig.domoticz_idx = AM2301;
+        dhtConfig.type = AM2301;
     else
         return false;
     /* Sleep Config */
@@ -68,7 +73,7 @@ bool Config::deserialize(char* json)
     /* LED Config */
     JsonObject& led = root["led"];
     ledConfig.enabled = led.get<bool>("enabled");
-    root.prettyPrintTo(Serial);
+    
     return root.success();
 }
 

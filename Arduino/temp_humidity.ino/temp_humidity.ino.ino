@@ -4,6 +4,14 @@
 #include "config.h"
 #include "wifiClient.h"
 
+#include <DallasTemperature.h>
+#include <OneWire.h>
+
+// Dallas
+#define ONE_WIRE_BUS 12
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature dallasTemp(&oneWire);
+
 // Temperature and humidity
 float temp = 0;
 float humidity = 0;
@@ -33,13 +41,15 @@ void setup()
   
   Serial.println("ESP8266 Initliazing!");   
   wifiClient.connect();  
-  dht.begin();  
+  dht.begin();
+  dallasTemp.begin();
 }
 
 void loop()
 {
     // Get readings from all sensors
     readDht();
+    readDallas();
     //printInfo();
     wifiClient.updateData(temp, humidity);
     if (sleepCfg.deepSleep) {
@@ -80,4 +90,15 @@ void readDht()
   Serial.print(" *C ");
   Serial.println("");
 }
+
+void readDallas()
+{
+    Serial.print(" Requesting dallas temp...");
+    dallasTemp.requestTemperatures(); // Send the command to get temperature readings 
+    Serial.println("DONE");
+    Serial.print("Temperature is: ");
+    Serial.print(dallasTemp.getTempCByIndex(0));
+    // Why "byIndex"?  You can have more than one DS18B20 on the same bus. 0 refers to the first IC on the wire 
+}
+
 
