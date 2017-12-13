@@ -1,6 +1,6 @@
-/* Config.h
- * Basig configuration for the ESP
-*/
+/// Config.h
+/// Basig configuration for the ESP
+///
 
 #include "config.h"
 
@@ -11,13 +11,18 @@ bool Config::readJson()
             "ssid": "",
             "password": "",
             "ip": "",
-            "port": "",
-            "idx": ""
+            "port": ""
         },			
-        "dht": {
-            "pin": "4",
-            "type": "DHT11"
-        },
+        "sensors": [ {
+                "pin": "4",
+                "type": "DHT11",
+                "idx": "1"
+            },
+            {
+                "pin": "12",
+                "type": "DS18B20",
+                "idx": "2"
+            } ],
         "sleep": {
             "deepSleep": "false",
             "sleepTime": "60"
@@ -32,7 +37,7 @@ bool Config::readJson()
 bool Config::deserialize(char* json)
 {
     Serial.println("deserialize()");
-    StaticJsonBuffer<400> jsonBuffer;
+    StaticJsonBuffer<600> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(json);
     // Test if parsing succeeds.
     if (!root.success()) {
@@ -41,43 +46,60 @@ bool Config::deserialize(char* json)
     }
     root.prettyPrintTo(Serial);
 
-    /* WIFI Config */
+    /// WIFI Config
     JsonObject& wifi = root["wifi"];
     const char* ssid = wifi["ssid"];
-    wifiConfig.ssid = const_cast<char*>(ssid);
+    strcpy(wifiConfig.ssid, ssid);    
     const char* pw = wifi["password"];
-    wifiConfig.password = const_cast<char*>(pw);
-    /* Domoticz Config */
+    strcpy(wifiConfig.password, pw);    
+    Serial.println("Wifi CFG OK");
+
+    /// Domoticz Config
     const char* ip = wifi["ip"];
-    wifiConfig.domoticz_ip = const_cast<char*>(ip);
-    wifiConfig.domoticz_port = wifi.get<int>("port");
-    wifiConfig.domoticz_idx = wifi.get<int>("idx");    
-    /* DHT Config */
-    JsonObject& dht = root["dht"];
-    dhtConfig.pin = dht.get<uint8_t>("pin");
-    String dhtType = dht.get<String>("type");
-    if (dhtType == "DHT11")
-        dhtConfig.type = DHT11;
-    else if (dhtType == "DHT22")
-        dhtConfig.type = DHT22;
-    else if (dhtType == "DHT21")
-        dhtConfig.type = DHT21;
-    else if (dhtType == "AM2301")
-        dhtConfig.type = AM2301;
-    else
-        return false;
-    /* Sleep Config */
+    strcpy(wifiConfig.domoticz_ip, ip);
+    wifiConfig.domoticz_port = wifi.get<uint16_t>("port");
+    Serial.println("Domoticz CFG OK");
+
+    /// Sensor Config
+    JsonArray& sensors = root["sensors"];
+    for (auto& sensor : sensors) {
+        sensorConfig[m_noOfSensors].pin = sensor["pin"];
+        const char* dhtType = sensor["type"];
+        Serial.println(dhtType);
+        if (strcmp(dhtType, "DHT11") == 0)
+            sensorConfig[m_noOfSensors].type = DHT11;
+        else if (strcmp(dhtType, "DHT22") == 0)
+            sensorConfig[m_noOfSensors].type = DHT22;
+        else if (strcmp(dhtType, "DHT21") == 0)
+            sensorConfig[m_noOfSensors].type = DHT21;
+        else if (strcmp(dhtType, "AM2301") == 0)
+            sensorConfig[m_noOfSensors].type = AM2301;
+        else if (strcmp(dhtType, "DS18B20") == 0)
+            sensorConfig[m_noOfSensors].type = DS18B20;
+        else {
+            Serial.println("Sensor NOT OK");
+            return false;
+        }
+        sensorConfig[m_noOfSensors].domoticz_idx = sensor["idx"];
+        m_noOfSensors++;
+        Serial.println("Sensor Added");
+    }
+
+    /// Sleep Config
     JsonObject& sleep = root["sleep"];
     sleepConfig.deepSleep = sleep.get<bool>("deepSleep");
     sleepConfig.sleepTime = sleep.get<int>("sleepTime");
-    /* LED Config */
+    Serial.println("Sleep CFG OK");
+
+    /// LED Config
     JsonObject& led = root["led"];
     ledConfig.enabled = led.get<bool>("enabled");
+    Serial.println("LED CFG OK");
     
     return root.success();
 }
 
-void Config::writeJson()
+/*void Config::writeJson()
 {
     const size_t bufferSize = 3*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(4);
     DynamicJsonBuffer jsonBuffer(bufferSize);
@@ -100,9 +122,7 @@ void Config::writeJson()
     JsonObject& sleep = root.createNestedObject("sleep");
     sleep["deepSleep"] = "false";
     sleep["time"] = "60";
-}
-
-
+}*/
 
 /*void Config::serialize(const WifiCfg& wifi, char* json, size_t maxSize)
 {

@@ -10,19 +10,18 @@ class WifiClient
 public:
     WifiClient() {};
     void connect();
-    void updateData(float temperature, float humidity);
-    void getWifiConfig(WifiCfg);
-    void setDomoticzConfig(const char* ip, int port, int idx);
+    void updateData(float temperature, float humidity, int idx);
+    void updateData(float temperature, int idx);
+    void setWifiConfig(WifiCfg*);
     
 private:
     bool configured = false;
     // Wifi
-    char* ssid = "";
-    char* password = "";
+    char* ssid {};
+    char* password {};
     // Domoticz
-    char* domoticzIp = "";
-    int domoticzPort = 0;
-    int domoticzIdx = 0;
+    char* domoticzIp {};
+    uint16_t domoticzPort = 0;
 };
 
 
