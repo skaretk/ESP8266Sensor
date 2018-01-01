@@ -5,6 +5,7 @@
 #include "domoticzWifiClient.h"
 #include "espWifiServer.h"
 #include "ds18b20Sensor.h"
+#include "multiDs18b20Sensor.h"
 #include "dhtSensor.h"
 
 // for stack analytics
@@ -45,6 +46,11 @@ void setup()
           else if (cfg.type == DS18B20) {
               sensor[i] = new Ds18b20Sensor(&wifiClient, cfg.pin, cfg.domoticz_idx, cfg.domoticz_setpoint_idx);
               Serial.println("DS18B20 sensor added!");
+          }
+          else if (cfg.type == MULTIDS18) {
+              // TODO: add correct parameters
+              // sensor[i] = new MultiDs18b20Sensor();
+              Serial.println("MULTIDS18 sensor added!");
           }
       }
       Serial.println("ESP Configured from json!");

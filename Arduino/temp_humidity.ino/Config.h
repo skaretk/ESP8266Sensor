@@ -11,6 +11,7 @@
 // #define DHTTYPE DHT22   // DHT 22 (AM2302), AM2321
 // #define DHTTYPE DHT21   // DHT 21 (AM2301)
 #define DS18B20 99
+#define MULTIDS18 100
 
 struct WifiCfg {
     // Wifi
