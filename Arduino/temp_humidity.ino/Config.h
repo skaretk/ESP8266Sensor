@@ -5,6 +5,7 @@
 #define CONFIG_H
 #include <DHT.h>
 #include <ArduinoJson.h>
+#include <FS.h>   // Include the SPIFFS library
 
 // #define DHTTYPE DHT11   // DHT 11
 // #define DHTTYPE DHT22   // DHT 22 (AM2302), AM2321
@@ -17,7 +18,10 @@ struct WifiCfg {
     char password[20] = ""; 
     // Domoticz
     char domoticz_ip[20] = "";
-    uint16_t domoticz_port = 0;
+    uint16_t domoticz_port{0};
+    // DNS
+    char dns[20] = "esp8266";
+    bool configured{ false };
 };
 
 struct SleepCfg {
@@ -29,6 +33,7 @@ struct SensorCfg {
     uint8_t pin;
     uint8_t type;
     int domoticz_idx;
+    int domoticz_setpoint_idx;
 };
 
 struct LedCfg {
@@ -38,23 +43,26 @@ struct LedCfg {
 class Config
 {
 public:
-    Config() {};
+    Config() { SPIFFS.begin(); }
     bool readJson();
-    //void writeJson();
+    //void writeJson();    
+
+    String printConfig();
 
     uint8_t getNoOfSensors() const { return m_noOfSensors; }
 
-    bool deserialize(char* json);
+    bool deserialize(String& json);
     //void serialize(const WifiCfg& data, char* json, size_t maxSize);
     
     WifiCfg wifiConfig;
     SleepCfg sleepConfig;
     SensorCfg sensorConfig[4]; // max 4 sensors
     LedCfg ledConfig;
-    
+
 private:    
     uint8_t m_noOfSensors{};
-    bool configured{ false };	
+    const String m_cfgFilename{ "/config.json" };
+    String m_json{};
 };
 
 #endif
