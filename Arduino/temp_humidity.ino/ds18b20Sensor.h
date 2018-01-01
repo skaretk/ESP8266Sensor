@@ -7,12 +7,18 @@
 class Ds18b20Sensor : public Sensor
 {
 public:
-    Ds18b20Sensor(int pin, int idx, WifiClient* wifiClient) : Sensor(pin, idx, "DS18", wifiClient), oneWire(pin), dallasTemp(&oneWire) {
+    Ds18b20Sensor(DomoticzWifiClient* wifiClient, int pin, int idx, int setPoint = 0) : Sensor(wifiClient, pin, "DS18", idx, setPoint), oneWire(pin), dallasTemp(&oneWire) {
         dallasTemp.begin();
     };
+
+    String data() override;
+    
+private:
     void read() override;
     void updateData() override;
-private:
+    void print() override;
+    void getSetPointVal() override;
+
     OneWire oneWire;
     DallasTemperature dallasTemp;
     float m_temp {};

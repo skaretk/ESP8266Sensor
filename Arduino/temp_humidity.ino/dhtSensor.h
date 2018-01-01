@@ -6,13 +6,18 @@
 class DhtSensor : public Sensor
 {
 public:    
-    DhtSensor(int pin, int idx, uint8_t type, WifiClient* wifiClient) : Sensor(pin, idx, "DHT", wifiClient), m_type(type), dht(pin, type) {
+    DhtSensor(DomoticzWifiClient* wifiClient, int pin, uint8_t type, int idx, int setPoint = 0) : Sensor(wifiClient, pin, "DHT", idx, setPoint), m_type(type), dht(pin, type) {
         dht.begin();
-    };
+    };    
 
-    void read() override;
-    void updateData() override;
+    String data() override;
+    
 private:
+    void read() override;
+    void updateData() override;    
+    void print() override;
+    void getSetPointVal() override;
+
     uint8_t m_type;
     DHT dht;
     float m_temp {};

@@ -15,3 +15,19 @@ void Ds18b20Sensor::updateData()
 {
     m_wifiClient->updateData(m_temp, m_idx);
 }
+
+String Ds18b20Sensor::data()
+{
+    return String("Temperature: " + String(m_temp));
+}
+
+void Ds18b20Sensor::print()
+{
+    Serial.println(data());
+}
+
+void Ds18b20Sensor::getSetPointVal()
+{
+    const char* data = m_wifiClient->getJsonResultData(m_setpoint_idx);
+    Serial.println(data);
+}
