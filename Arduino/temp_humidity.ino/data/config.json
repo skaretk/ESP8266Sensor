@@ -1,16 +1,16 @@
 {
     "wifi": {
-        "ssid": "KogC",
-        "password": "Vesla2011",
-        "ip": "192.168.1.35",
-        "port": "8080",
-        "dns": "esptester"
+        "ssid": "ssid",
+        "password": "pw",
+        "ip": "domoticz-ip",
+        "port": "domoticz-port",
+        "dns": "espSensor"
     },			
     "sensors": [ {
             "pin": "14",
             "type": "DHT11",
             "idx": "125",
-            "setpointIdx": "120"
+            "setpointIdx": "domoticzSetPointIdx"
         } ],
     "sleep": {
         "deepSleep": "false",
