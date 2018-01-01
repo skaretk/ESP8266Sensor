@@ -5,17 +5,18 @@
 
 #include "config.h"
 
-class WifiClient
+class DomoticzWifiClient
 {
 public:
-    WifiClient() {};
+    DomoticzWifiClient() {};
     void connect();
     void updateData(float temperature, float humidity, int idx);
     void updateData(float temperature, int idx);
     void setWifiConfig(WifiCfg*);
+    void getJson(int idx, String& json);
+    const char* getJsonResultData(int idx);
     
 private:
-    bool configured = false;
     // Wifi
     char* ssid {};
     char* password {};
