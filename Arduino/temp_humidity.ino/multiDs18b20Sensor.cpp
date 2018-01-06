@@ -1,43 +1,50 @@
 #include "multiDs18b20Sensor.h"
 
-void MultiDs18b20Sensor::setDeviceAddress(DeviceAddress addr, int no)
+void MultiDs18b20Sensor::addDs18B20Sensor(Ds18B20Sensor_t &sensor, int idx)
 {
-    if (no == 0) {
-        memcpy(m_deviceAddress0, addr, sizeof(addr));
-    }
-    else if (no == 1) {
-        memcpy(m_deviceAddress1, addr, sizeof(addr));
-    }
-    else
-        Serial.println("multiDs18b20Sensor: Invalid number");  
+    m_ds18b20Sensor[idx] = sensor;
+    m_noOfSensors++;
 }
 
 bool MultiDs18b20Sensor::resolve()
 {
     oneWire.reset_search();
-    if (!dallasTemp.getAddress(m_deviceAddress0, 0)) Serial.println("Unable to find address for Device 0");
-    if (!dallasTemp.getAddress(m_deviceAddress1, 1)) Serial.println("Unable to find address for Device 1");
+    for (int i = 0; i < m_noOfSensors; i++)
+    {
+        if (!dallasTemp.getAddress(m_ds18b20Sensor[i].devAddr, i)) 
+            Serial.printf("Unable to find address for Device %u\n", i);
+    }
 }
 
 
 void MultiDs18b20Sensor::read()
 {
     Serial.print("Requesting multiple dallas temp...");
-    m_temp[0] = dallasTemp.getTempC(m_deviceAddress0);
-    m_temp[1] = dallasTemp.getTempC(m_deviceAddress1);
+    for (int i = 0; i < m_noOfSensors; i++)
+    {
+        m_temp[i] = dallasTemp.getTempC(m_ds18b20Sensor[i].devAddr);
+    }
     Serial.println("DONE");
     print();
 }
 
 void MultiDs18b20Sensor::updateData()
 {
-    m_wifiClient->updateData(m_temp[0], m_idx);
-    m_wifiClient->updateData(m_temp[1], m_idx2);
+    for (int i = 0; i < m_noOfSensors; i++)
+    {
+        m_wifiClient->updateData(m_temp[i], m_ds18b20Sensor[i].domoticzData.m_idx);
+    }
 }
 
 String MultiDs18b20Sensor::data()
 {
-    return String("Temperatures: Device 0: " + String(m_temp[0]) + " Device 1: " + String(m_temp[1]));
+    String data;
+
+    for (int i = 0; i < m_noOfSensors; i++)
+    {
+        data += String("Temperature " + String(i) + ": " + String(m_temp[i]) + "\n");
+    }
+    return data;
 }
 
 void MultiDs18b20Sensor::print()
@@ -47,6 +54,11 @@ void MultiDs18b20Sensor::print()
 
 void MultiDs18b20Sensor::getSetPointVal()
 {
-    const char* data = m_wifiClient->getJsonResultData(m_setpoint_idx);
-    Serial.println(data);
+    for (int i = 0; i < m_noOfSensors; i++)
+    {
+        if (m_ds18b20Sensor[i].domoticzData.setpointIdx) {
+            const char* data = m_wifiClient->getJsonResultData(m_ds18b20Sensor[i].domoticzData.setpointIdx);
+            m_ds18b20Sensor[i].domoticzData.setpointVal = atof(data);
+        }
+    }
 }

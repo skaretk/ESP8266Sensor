@@ -10,7 +10,6 @@
 #include "config.h"
 #include "domoticzWifiClient.h"
 #include "espWifiServer.h"
-#include "ds18b20Sensor.h"
 #include "multiDs18b20Sensor.h"
 #include "dhtSensor.h"
 
@@ -52,27 +51,34 @@ void setup()
                                               
   Serial.println("ESP8266 Initliazing..");
 
-  if (config->readJson()) {      
+  if (config->readJson()) {
       wifiClient.setWifiConfig(&config->wifiConfig);
+      
       
       for (uint8_t i = 0; i < config->getNoOfSensors(); i++)
       {
           auto cfg = config->sensorConfig[i];
           if (cfg.type == DHT11) {
-              sensor[i] = new DhtSensor(&wifiClient, cfg.pin, static_cast<int>(DHT11), cfg.domoticz_idx, cfg.domoticz_setpoint_idx);
+              DomoticzData_t dht11Domoticz;
+              dht11Domoticz.m_idx = cfg.domoticz_idx;
+              dht11Domoticz.setpointIdx = cfg.domoticz_setpoint_idx;
+              sensor[i] = new DhtSensor(&wifiClient, cfg.pin, static_cast<int>(DHT11), dht11Domoticz);
               Serial.println("DHT11 sensor added!");
           }
           else if (cfg.type == DHT22) {
-              sensor[i] = new DhtSensor(&wifiClient, cfg.pin, static_cast<int>(DHT22), cfg.domoticz_idx, cfg.domoticz_setpoint_idx);
+              DomoticzData_t dht22Domoticz;
+              dht22Domoticz.m_idx = cfg.domoticz_idx;
+              dht22Domoticz.setpointIdx = cfg.domoticz_setpoint_idx;
+              sensor[i] = new DhtSensor(&wifiClient, cfg.pin, static_cast<int>(DHT22), dht22Domoticz);
               Serial.println("DHT22 sensor added!");
           }
-          else if (cfg.type == DS18B20) {
+          /*else if (cfg.type == DS18B20) {
               sensor[i] = new Ds18b20Sensor(&wifiClient, cfg.pin, cfg.domoticz_idx, cfg.domoticz_setpoint_idx);
               Serial.println("DS18B20 sensor added!");
-          }
+          }*/
           else if (cfg.type == MULTIDS18) {
               // TODO: add correct parameters
-              // sensor[i] = new MultiDs18b20Sensor();
+              sensor[i] = new MultiDs18b20Sensor(&wifiClient, cfg.pin);
               Serial.println("MULTIDS18 sensor added!");
           }
       }
@@ -102,7 +108,7 @@ void setup()
   }
   Serial.println("mDNS responder started");
 
-  wifiServer->start();  
+  wifiServer->start();
 }
 
 int seconds = 0;

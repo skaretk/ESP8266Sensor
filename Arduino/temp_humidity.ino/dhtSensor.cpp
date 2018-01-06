@@ -28,12 +28,18 @@ void DhtSensor::read()
 
 void DhtSensor::updateData()
 {
-    m_wifiClient->updateData(m_temp, m_humidity, m_idx);
+    m_wifiClient->updateData(m_temp, m_humidity, m_domoticz.m_idx);
 }
 
 String DhtSensor::data()
 {
-    return String("Temperature: " + String(m_temp) + " Humidity: " + String(m_humidity));
+    String setPoint;
+    if (!m_domoticz.setpointIdx)
+        setPoint = "";
+    else
+        setPoint = String("\nSetPoint: " + String(m_domoticz.setpointVal));
+
+    return String("Temperature: " + String(m_temp) + "\nHumidity: " + String(m_humidity) + setPoint);
 }
 
 void DhtSensor::print()
@@ -43,8 +49,8 @@ void DhtSensor::print()
 
 void DhtSensor::getSetPointVal()
 {
-    if (m_setpoint_idx) {
-        const char* data = m_wifiClient->getJsonResultData(m_setpoint_idx);
-        Serial.println(data);
+    if (m_domoticz.setpointIdx) {
+        const char* data = m_wifiClient->getJsonResultData(m_domoticz.setpointIdx);
+        m_domoticz.setpointVal = atof(data);
     }
 }

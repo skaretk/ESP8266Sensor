@@ -1,17 +1,21 @@
-// Class for read multiple DS18B20 temperature Sensor on the same oneWire bus
+// Class for up to for DS18B20 temperature Sensors on a oneWire bus
 #pragma once
 #include <DallasTemperature.h>
 #include <OneWire.h>
 #include "sensor.h"
 
+struct Ds18B20Sensor_t {
+    DomoticzData_t domoticzData{};
+    DeviceAddress devAddr{};
+};
+
 class MultiDs18b20Sensor : public Sensor
 {
 public:
-    MultiDs18b20Sensor(DomoticzWifiClient* wifiClient, int pin, int idx, int idx2, int setPoint = 0) : Sensor(wifiClient, pin, "MULTIDS18", idx, setPoint), oneWire(pin), dallasTemp(&oneWire),
-        m_idx2(idx2) {
+    MultiDs18b20Sensor(DomoticzWifiClient* wifiClient, int pin) : Sensor(wifiClient, pin, "MULTIDS18"), oneWire(pin), dallasTemp(&oneWire){
         dallasTemp.begin();
     };
-    void setDeviceAddress(DeviceAddress addr, int no);
+    void addDs18B20Sensor(Ds18B20Sensor_t &sensor, int idx);
     bool resolve();
     String data() override;
 
@@ -20,11 +24,12 @@ private:
     void updateData() override;
     void print() override;
     void getSetPointVal() override;
+    
+    Ds18B20Sensor_t m_ds18b20Sensor[4]; // max 4 sensors
 
-    DeviceAddress m_deviceAddress0, m_deviceAddress1; // max two sensors on the same bus
-    int m_idx2;
+    int m_noOfSensors{};
 
     OneWire oneWire;
     DallasTemperature dallasTemp;
-    float m_temp[2];
+    float m_temp[4];
 };

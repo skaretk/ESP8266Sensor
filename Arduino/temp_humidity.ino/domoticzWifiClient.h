@@ -5,6 +5,12 @@
 
 #include "config.h"
 
+struct DomoticzData_t{
+    int m_idx { 0 };
+    int setpointIdx { 0 };
+    float setpointVal { 0 };
+};
+
 class DomoticzWifiClient
 {
 public:
