@@ -36,7 +36,7 @@ String Config::printConfig()
 bool Config::deserialize(String& json)
 {
     Serial.println("deserialize()");
-    StaticJsonBuffer<600> jsonBuffer;
+    StaticJsonBuffer<1000> jsonBuffer;
     JsonObject& root = jsonBuffer.parseObject(json);
     // Test if parsing succeeds.
     if (!root.success()) {
@@ -69,30 +69,60 @@ bool Config::deserialize(String& json)
     // Sensor Config
     JsonArray& sensors = root["sensors"];
     for (auto& sensor : sensors) {
-        sensorConfig[m_noOfSensors].pin = sensor["pin"];
-        const char* dhtType = sensor["type"];
-        Serial.println(dhtType);
-        if (strcmp(dhtType, "DHT11") == 0)
-            sensorConfig[m_noOfSensors].type = DHT11;
-        else if (strcmp(dhtType, "DHT22") == 0)
-            sensorConfig[m_noOfSensors].type = DHT22;
-        else if (strcmp(dhtType, "DHT21") == 0)
-            sensorConfig[m_noOfSensors].type = DHT21;
-        else if (strcmp(dhtType, "AM2301") == 0)
-            sensorConfig[m_noOfSensors].type = AM2301;
-        else if (strcmp(dhtType, "DS18B20") == 0)
-            sensorConfig[m_noOfSensors].type = DS18B20;
+        const char* sensorType = sensor["type"];
+        SensorCfg* sensorCfg;
+        DomoticzCfg* domoticzCfg;
+        // DHT Sensors
+        if (strncmp(sensorType, "DHT", 3) == 0 || strncmp(sensorType, "AM", 2) == 0) {
+            sensorCfg = &dhtConfig[m_noOfDhtSensors].sensor;
+            domoticzCfg = &dhtConfig[m_noOfDhtSensors].domoticzCfg;
+            if (strcmp(sensorType, "DHT11") == 0)
+                sensorCfg->type = DHT11;
+            else if (strcmp(sensorType, "DHT22") == 0)
+                sensorCfg->type = DHT22;
+            else if (strcmp(sensorType, "DHT21") == 0)
+                sensorCfg->type = DHT21;
+            else if (strcmp(sensorType, "AM2301") == 0)
+                sensorCfg->type = AM2301;
+            else {
+                Serial.println("DHT Sensor NOT OK");
+                return false;
+            }
+            domoticzCfg->idx = sensor["idx"];
+            const char* setPoint = sensor["setpointIdx"];
+            if (setPoint) { // Optional
+                domoticzCfg->setpoint_idx = atoi(setPoint);
+            }
+            m_noOfDhtSensors++;
+            Serial.println("DHT sensor added");
+        }
+        // OneWire / DS18B20
+        else if (strcmp(sensorType, "OneWire") == 0) {
+            Serial.println("Onewire bus added");
+            sensorCfg = &oneWireConfig.sensor;            
+            domoticzCfg = &oneWireConfig.domoticzCfg[0];
+            JsonArray& ds18b20sensors = sensor["ds18b20sensors"];
+            // DS18B20
+            if (ds18b20sensors.success()) {
+                sensorCfg->type = DS18B20;
+                for (auto& ds18b20sensor : ds18b20sensors) {
+                    domoticzCfg->idx = ds18b20sensor["idx"];
+                    const char* setPoint = ds18b20sensor["setpointIdx"];
+                    if (setPoint) { // Optional
+                        domoticzCfg->setpoint_idx = atoi(setPoint);
+                    }
+                    domoticzCfg++;
+                    Serial.println("DS18B20 sensor added");
+                    m_noOfDallasTemperatureSensors++;
+                }
+            }
+            m_noOfOneWireBus++;            
+        }
         else {
             Serial.println("Sensor NOT OK");
             return false;
         }
-        sensorConfig[m_noOfSensors].domoticz_idx = sensor["idx"];
-        const char* setPoint = sensor["setpointIdx"];
-        if (setPoint) { // Optional
-            sensorConfig[m_noOfSensors].domoticz_setpoint_idx = atoi(setPoint);
-        }
-        m_noOfSensors++;
-        Serial.println("Sensor Added");
+        sensorCfg->pin = sensor["pin"];    // Common for each sensorCfg    
     }
 
     // Sleep Config
@@ -108,38 +138,3 @@ bool Config::deserialize(String& json)
     
     return root.success();
 }
-
-/*void Config::writeJson()
-{
-    const size_t bufferSize = 3*JSON_OBJECT_SIZE(2) + JSON_OBJECT_SIZE(3) + JSON_OBJECT_SIZE(4);
-    DynamicJsonBuffer jsonBuffer(bufferSize);
-    
-    JsonObject& root = jsonBuffer.createObject();
-
-    JsonObject& wifi = root.createNestedObject("wifi");
-    wifi["ssid"] = "";
-    wifi["password"] = "";
-
-    JsonObject& domoticz = root.createNestedObject("domoticz");
-    domoticz["ip"] = "";
-    domoticz["port"] = "";
-    domoticz["idx"] = "";
-
-    JsonObject& esp = root.createNestedObject("esp");
-    esp["dhtPin"] = "4";
-    esp["dhtType"] = "DHT11";
-
-    JsonObject& sleep = root.createNestedObject("sleep");
-    sleep["deepSleep"] = "false";
-    sleep["time"] = "60";
-}*/
-
-/*void Config::serialize(const WifiCfg& wifi, char* json, size_t maxSize)
-{
-    StaticJsonBuffer<400> jsonBuffer;
-    JsonObject& root = jsonBuffer.createObject();    
-    JsonObject& wifi = root.createNestedObject("wifi");
-    root["name"] = wifi.ssid;
-    root["time"] = wifi.password;
-    root.printTo(json, maxSize);
-}*/

@@ -37,9 +37,9 @@ String DhtSensor::data()
     if (!m_domoticz.setpointIdx)
         setPoint = "";
     else
-        setPoint = String("\nSetPoint: " + String(m_domoticz.setpointVal));
+        setPoint = String("\nSP: " + String(m_domoticz.setpointVal));
 
-    return String("Temperature: " + String(m_temp) + "\nHumidity: " + String(m_humidity) + setPoint);
+    return String("Temp: " + String(m_temp) + " Hum: " + String(m_humidity) + setPoint);
 }
 
 void DhtSensor::print()

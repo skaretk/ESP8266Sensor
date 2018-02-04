@@ -1,0 +1,32 @@
+{
+	"wifi": {
+		"ssid": "SSID",
+		"password": "PW",
+		"ip": "x.x.x.x",
+		"port": "PORT",
+		"dns": "esptester"
+	},
+	"sensors": [{
+			"pin": "0",
+			"type": "DHT11",
+			"idx": "0",
+			"setpointIdx": "1"
+		}, {
+			"pin": "1",
+			"type": "OneWire",
+			"ds18b20sensors": [{
+					"idx": "2"
+				}, {
+					"idx": "3"
+				}
+			]
+		}
+	],
+	"sleep": {
+		"deepSleep": "false",
+		"sleepTime": "60"
+	},
+	"led": {
+		"enabled": "false"
+	}
+}

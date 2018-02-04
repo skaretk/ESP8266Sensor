@@ -10,7 +10,7 @@
 #include "config.h"
 #include "domoticzWifiClient.h"
 #include "espWifiServer.h"
-#include "multiDs18b20Sensor.h"
+#include "oneWireSensor.h"
 #include "dhtSensor.h"
 
 // for stack analytics
@@ -27,7 +27,6 @@ Adafruit_SSD1306 display(OLED_RESET);
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
 //----------------------------
-
 
 const char *ssid = "EspSensor";
 
@@ -47,41 +46,42 @@ void setup()
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3D (for the 128x64)
 
   display.display();
-  delay(500);  
+  delay(500);
                                               
   Serial.println("ESP8266 Initliazing..");
 
   if (config->readJson()) {
       wifiClient.setWifiConfig(&config->wifiConfig);
+      uint8_t sensorIdx;
       
-      
-      for (uint8_t i = 0; i < config->getNoOfSensors(); i++)
+      for (sensorIdx = 0; sensorIdx < config->getNoOfDhtSensors(); sensorIdx++)
       {
-          auto cfg = config->sensorConfig[i];
-          if (cfg.type == DHT11) {
-              DomoticzData_t dht11Domoticz;
-              dht11Domoticz.m_idx = cfg.domoticz_idx;
-              dht11Domoticz.setpointIdx = cfg.domoticz_setpoint_idx;
-              sensor[i] = new DhtSensor(&wifiClient, cfg.pin, static_cast<int>(DHT11), dht11Domoticz);
+          auto cfg = config->dhtConfig[sensorIdx];
+          DomoticzData_t domoticzData;
+          domoticzData.m_idx = cfg.domoticzCfg.idx;
+          domoticzData.setpointIdx = cfg.domoticzCfg.setpoint_idx;
+          if (cfg.sensor.type == DHT11) {              
+              sensor[sensorIdx] = new DhtSensor(&wifiClient, cfg.sensor.pin, static_cast<int>(DHT11), domoticzData);
               Serial.println("DHT11 sensor added!");
           }
-          else if (cfg.type == DHT22) {
-              DomoticzData_t dht22Domoticz;
-              dht22Domoticz.m_idx = cfg.domoticz_idx;
-              dht22Domoticz.setpointIdx = cfg.domoticz_setpoint_idx;
-              sensor[i] = new DhtSensor(&wifiClient, cfg.pin, static_cast<int>(DHT22), dht22Domoticz);
+          else if (cfg.sensor.type == DHT22) {
+              sensor[sensorIdx] = new DhtSensor(&wifiClient, cfg.sensor.pin, static_cast<int>(DHT22), domoticzData);
               Serial.println("DHT22 sensor added!");
-          }
-          /*else if (cfg.type == DS18B20) {
-              sensor[i] = new Ds18b20Sensor(&wifiClient, cfg.pin, cfg.domoticz_idx, cfg.domoticz_setpoint_idx);
-              Serial.println("DS18B20 sensor added!");
-          }*/
-          else if (cfg.type == MULTIDS18) {
-              // TODO: add correct parameters
-              sensor[i] = new MultiDs18b20Sensor(&wifiClient, cfg.pin);
-              Serial.println("MULTIDS18 sensor added!");
-          }
+          }          
       }
+      auto cfg = config->oneWireConfig;
+      if (cfg.sensor.type == DS18B20) {
+          sensor[sensorIdx] = new OneWireSensor(&wifiClient, cfg.sensor.pin);
+          OneWireSensor* ds18b20 = (OneWireSensor*)sensor[sensorIdx];
+          for (uint8_t i = 0; i < config->getNoOfDallasTemperatureSensors(); i++)
+          {
+              Ds18B20Sensor_t* dsSensor = new Ds18B20Sensor_t();
+              dsSensor->domoticzData.m_idx = cfg.domoticzCfg[i].idx;
+              ds18b20->addDs18B20Sensor(dsSensor, i);
+          }
+          Serial.println("DS18B20 sensor(s) added!");
+          ds18b20->resolve();
+      } 
       Serial.println("ESP Configured from json!");
       display.clearDisplay();
       display.setTextSize(1);
@@ -92,9 +92,7 @@ void setup()
       display.display();
 
       wifiClient.connect();
-      
-      Serial.println("wifiServer started");
-  }
+  }      
   else {
       Serial.print("Setting up softAP ... ");
       Serial.println(WiFi.softAP(ssid) ? "OK" : "Failed");
@@ -106,9 +104,12 @@ void setup()
   if (!MDNS.begin(config->wifiConfig.dns)) {             // Start the mDNS responder (default esp8266.local )
       Serial.println("Error setting up MDNS responder!");
   }
-  Serial.println("mDNS responder started");
+  else {
+      Serial.println("mDNS responder started");
+  }
 
   wifiServer->start();
+  Serial.println("espWifiServer started");
 }
 
 int seconds = 0;
@@ -127,13 +128,16 @@ void loop()
         for (uint8_t i = 0; i < config->getNoOfSensors(); i++)
         {
             sensor[i]->read();
+            Serial.println("Sensor read OK");
             sensor[i]->updateData();
-            sensor[i]->getSetPointVal();
-            display.printf("%s\n", sensor[i]->data().c_str());            
+            Serial.println("SensorData updated");
+            //sensor[i]->getSetPointVal();
+            //Serial.println("SetPoint data fetched");
+            display.printf("%s\n", sensor[i]->data().c_str());
             /*Serial.printf("Free read: %u\n", ESP.getFreeHeap());
             Serial.printf("Free read: %4d\n", cont_get_free_stack(&g_cont));*/
         }
-        display.display();
+         display.display();
         /*Serial.printf("Free after: %u\n", ESP.getFreeHeap());
         Serial.printf("Free after: %4d\n", cont_get_free_stack(&g_cont));*/
     }
